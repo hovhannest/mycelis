@@ -18,7 +18,7 @@ This document is **normative for implementation**. Do not introduce languages, f
 
 | Topic | Decision |
 |---|---|
-| Language | **Rust** (edition 2021+; MSRV **1.85**) |
+| Language | **Rust** (edition 2021+; MSRV **1.97.1**) |
 | Product shape | **One workspace, three profiles** (`leaf` / `node` / `full`) — not one fat binary on every device |
 | Networking substrate | **FreeTAKTeam Reticulum Rust stack** (`reticulum-rs*` + embedded crates), **EPL-2.0** |
 | Control plane | **Mycelia-native compact messages over Reticulum first**; optional LXMF interop later |
@@ -142,7 +142,7 @@ Do **not** add a second Ed25519/X25519 stack. Use keys/crypto exposed by the cho
 
 | Crate | License | Purpose | Validated |
 |---|---|---|---|
-| [`libp2p`](https://crates.io/crates/libp2p) `0.56.x` with features: `kad`, `tcp`, `noise`, `yamux`, `dns`, `tokio`, `identify` | MIT | Disposable Internet locator → RNS identity/reachability | ✓ MSRV 1.83; Kad provider/bootstrap APIs present |
+| [`libp2p`](https://crates.io/crates/libp2p) `0.56.x` with features: `kad`, `tcp`, `noise`, `yamux`, `dns`, `tokio`, `identify`, `macros` | MIT | Disposable Internet locator → RNS identity/reachability | ✓ MSRV 1.83; Kad provider/bootstrap APIs present |
 
 **Explicitly do not enable** on Mycelia by default: gossipsub, floodsub, relay-as-app-transport, wasm, full feature umbrella. DHT is a phone book, not the data plane.
 
@@ -253,4 +253,5 @@ Do not re-license Mycelia as Reticulum License. Keep substrate behind the transp
 
 | Date | Change |
 |---|---|
+| 2026-07-23 | MSRV / toolchain pin raised to **1.97.1** (current stable) |
 | 2026-07-22 | Accepted: Rust + tiered profiles; FreeTAKTeam reticulum-rs primary; libp2p full-only; validated crates.io availability and licenses |

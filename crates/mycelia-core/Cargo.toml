@@ -1,0 +1,30 @@
+[package]
+name = "mycelia-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Mycelia protocol core: IDs, attestations, domains, registry (no_std)"
+
+[features]
+default = ["std", "crypto"]
+std = ["alloc", "ed25519-dalek/std", "sha2/std", "hmac/std", "thiserror"]
+alloc = []
+# Compact Ed25519 attestations (dalek; same algo family as RNS substrate).
+crypto = ["dep:ed25519-dalek", "dep:rand_core", "dep:sha2", "dep:hmac"]
+
+[dependencies]
+heapless = { workspace = true }
+log = { workspace = true }
+ed25519-dalek = { workspace = true, optional = true }
+rand_core = { workspace = true, optional = true, features = ["getrandom"] }
+sha2 = { workspace = true, optional = true }
+hmac = { workspace = true, optional = true }
+thiserror = { workspace = true, optional = true }
+
+[dev-dependencies]
+ed25519-dalek = { workspace = true, default-features = false, features = ["rand_core", "std"] }
+rand_core = { workspace = true, features = ["getrandom"] }
+
+[lib]
+path = "src/lib.rs"

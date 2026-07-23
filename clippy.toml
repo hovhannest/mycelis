@@ -1,0 +1,2 @@
+# Clippy workspace defaults — keep leaf/no_std friendly
+cognitive-complexity-threshold = 30

@@ -1,0 +1,11 @@
+/target/
+**/*.rs.bk
+Cargo.lock.bak
+.idea/
+.vscode/
+*.pdb
+.env
+__pycache__/
+tools/interop/.venv/
+*.swp
+.DS_Store

@@ -1,0 +1,14 @@
+[package]
+name = "mycelia-leaf"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Mycelia leaf profile (firmware-oriented; no tokio/libp2p)"
+
+[dependencies]
+mycelia-core = { workspace = true, features = ["alloc", "crypto"] }
+heapless = { workspace = true }
+
+[lib]
+path = "src/lib.rs"

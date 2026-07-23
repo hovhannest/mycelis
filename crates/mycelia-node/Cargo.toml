@@ -1,0 +1,35 @@
+[package]
+name = "mycelia-node"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Mycelia std node runtime (discovery, domains, control API)"
+
+[features]
+default = []
+discovery-dht = ["dep:mycelia-dht"]
+gateway = ["dep:mycelia-gateway"]
+
+[dependencies]
+mycelia-core = { workspace = true, features = ["std", "crypto"] }
+mycelia-dht = { workspace = true, optional = true }
+mycelia-gateway = { workspace = true, optional = true }
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "net", "time", "sync", "io-util", "fs"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+toml = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+mdns-sd = { workspace = true }
+ed25519-dalek = { workspace = true, default-features = false, features = ["rand_core", "std"] }
+hex = { workspace = true }
+bytes = { workspace = true }
+log = { workspace = true }
+heapless = { workspace = true }
+sha2 = { workspace = true, default-features = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "net", "time", "sync", "io-util", "test-util"] }

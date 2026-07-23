@@ -1,0 +1,4 @@
+# Pin to current stable (1.97.1 as of 2026-07-16).
+[toolchain]
+channel = "1.97.1"
+components = ["rustfmt", "clippy"]

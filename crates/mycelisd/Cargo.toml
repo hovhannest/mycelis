@@ -1,0 +1,30 @@
+[package]
+name = "mycelisd"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Mycelia daemon / CLI"
+
+[[bin]]
+name = "mycelisd"
+path = "src/main.rs"
+
+[features]
+default = ["node"]
+node = []
+full = ["node", "discovery-dht"]
+discovery-dht = ["mycelia-node/discovery-dht", "dep:mycelia-dht"]
+gateway = ["mycelia-node/gateway", "dep:mycelia-gateway"]
+control-lxmf = []
+
+[dependencies]
+mycelia-node = { workspace = true }
+mycelia-dht = { workspace = true, optional = true }
+mycelia-gateway = { workspace = true, optional = true }
+clap = { workspace = true }
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "signal", "net", "time", "io-util"] }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+serde_json = { workspace = true }

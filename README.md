@@ -2,7 +2,7 @@
 
 > A living network without a center.
 
-Mycelia is a **decentralized domain, community, and service fabric** built on the [Reticulum Network Stack](https://reticulum.network). Reticulum supplies identity, routing, path discovery, transport multiplexing, and store-and-forward. Mycelia adds the missing middle layer: **domains**, **communities**, **scoped service discovery**, **authorization**, and **policy** — without mandatory central infrastructure.
+Mycelia is a **decentralized domain, community, and service fabric** built to run above the [Reticulum Network Stack](https://reticulum.network). This repository contains the Rust implementation (`mycelisd`) and design docs.
 
 | Layer | Responsibility |
 |---|---|
@@ -11,49 +11,50 @@ Mycelia is a **decentralized domain, community, and service fabric** built on th
 | **Reticulum** | Identity · routing · mesh · transports · store-and-forward |
 | **Carriers** | LoRa · Wi‑Fi · TCP/UDP · BLE · serial · I2P · … |
 
-## Why Mycelia
+## Build & test
 
-Mesh substrates (Reticulum, Yggdrasil, libp2p) and apps (Nomad Network, Sideband, Meshtastic) are well served. What is largely missing is an organization fabric that turns a flat cryptographic mesh into governable ownership boundaries, participation groups, and discoverable services — without a coordination SaaS.
+Requirements: Rust **1.97.1+** (see `rust-toolchain.toml`).
 
-That niche is Mycelia’s wedge. Closest neighbors: **Veilid** (keyed networks), **GNU Name System** (self-sovereign zones), **Nebula** (cert groups), and the **Reticulum app layer** (interop target, not competitor).
+```bash
+cargo test --workspace
+cargo check -p mycelisd --features full
+bash scripts/check-leaf-deps.sh
+```
 
-## Core principles
+### Run a node
 
-1. **No mandatory central infrastructure** — no required cloud, CA, IdP, or single relay operator.
-2. **Zero-config Internet join** — connecting to the Internet should be enough to find the network; no single load-bearing bootstrap anchor.
-3. **Local autonomy** — useful when offline or partitioned.
-4. **Self-sovereign identity** — Reticulum identities; no registration authority.
-5. **Privacy by default** — reachable ≠ visible ≠ authorized ≠ discoverable.
-6. **Modular under hostility** — swap transports, obfuscation, discovery providers, and gateways without rewriting the stack.
+```bash
+cargo run -p mycelisd -- --data-dir .mycelis-a start
+# another terminal:
+cargo run -p mycelisd -- --data-dir .mycelis-a status
+cargo run -p mycelisd -- --data-dir .mycelis-a domains create home
+```
 
-## Quick links
+Control plane: localhost JSON over TCP; address written to `<data-dir>/control.addr`.
+
+### Features
+
+| Feature | Effect |
+|---|---|
+| default / `node` | Standard node + CLI |
+| `full` / `discovery-dht` | Enable `mycelia-dht` (libp2p Kad locator) |
+| `gateway` | Enable SOCKS5 gateway crate |
+
+## Docs
 
 | Document | Purpose |
 |---|---|
-| [docs/PRD.md](docs/PRD.md) | Product requirements and architecture |
-| [docs/tech-stack.md](docs/tech-stack.md) | **Normative** language, profiles, crates, and dependency policy |
-| [docs/landscape-survey.md](docs/landscape-survey.md) | Competitors, prior art, comparison matrix, design decisions |
-| [docs/market-and-research.md](docs/market-and-research.md) | Market context and researched tech/protocol notes (2026) |
+| [docs/PRD.md](docs/PRD.md) | Product requirements |
+| [docs/tech-stack.md](docs/tech-stack.md) | Normative language, profiles, crates |
+| [docs/implementation-plan.md](docs/implementation-plan.md) | Build/test plan + **progress checklist** |
+| [docs/wire-format.md](docs/wire-format.md) | Control-plane binary format |
+| [docs/landscape-survey.md](docs/landscape-survey.md) | Competitors / prior art |
+| [docs/market-and-research.md](docs/market-and-research.md) | Market research notes |
 
 ## Status
 
-**Draft / pre-implementation.** Product design in the PRD; competitive context in the landscape survey; **implementation stack locked in [docs/tech-stack.md](docs/tech-stack.md)** (Rust, tiered `leaf`/`node`/`full` profiles, FreeTAKTeam Reticulum crates, optional libp2p on full nodes only). Proposed daemon: `mycelisd`.
-
-```bash
-mycelisd start
-mycelisd status
-mycelisd domains list
-mycelisd communities list
-```
-
-## Naming
-
-- **Product:** Mycelia  
-- **Repository directory:** `mycelis` (historical spelling)  
-- **Daemon:** `mycelisd`  
-
-A Mycelia *domain* is a cryptographic ownership boundary — **not** a DNS domain.
+**v0.1.0 implementation in progress.** Core protocol, node runtime, CLI, e2e domain/service tests, optional DHT/gateway crates, and CI are in-tree. Live FreeTAKTeam `reticulum-rs` TCP adapter is deferred behind `ReticulumTransport` (mock hub used in CI). Leaf hardware smoke pending board access.
 
 ## License
 
-Documentation in this repository is project material under active drafting. Runtime licensing will be chosen with Reticulum ecosystem constraints in mind (see [market-and-research.md](docs/market-and-research.md#reticulum-license--ecosystem-risk)).
+MIT — see [LICENSE](LICENSE). Substrate crates may use EPL-2.0 when linked (see tech-stack).
