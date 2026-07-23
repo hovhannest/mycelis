@@ -1,3 +1,3 @@
-# Placeholder — pin when running interop
-# rns>=1.0.0
+# Optional Python Reticulum reference stack for interop probes.
+rns>=0.9.0
 # lxmf>=0.6.0

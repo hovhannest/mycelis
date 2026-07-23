@@ -170,6 +170,10 @@ impl ServiceRegistry {
         }
     }
 
+    pub fn iter(&self) -> impl Iterator<Item = &ServiceRecord> {
+        self.records.iter()
+    }
+
     pub fn list_visible(
         &self,
         viewer: NodeId,

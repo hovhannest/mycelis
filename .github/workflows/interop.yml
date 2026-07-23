@@ -1,0 +1,32 @@
+name: Interop
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [labeled, opened, synchronize, reopened]
+
+jobs:
+  interop:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'interop')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.97.1"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: start mycelisd (mock)
+        run: |
+          cargo build -p mycelisd
+          ./target/debug/mycelisd --data-dir /tmp/mycelis-interop start --transport mock &
+          for i in $(seq 1 30); do
+            if [ -f /tmp/mycelis-interop/control.addr ]; then break; fi
+            sleep 0.5
+          done
+          test -f /tmp/mycelis-interop/control.addr
+      - name: smoke_announce.py
+        env:
+          MYCELIS_DATA_DIR: /tmp/mycelis-interop
+        run: python tools/interop/smoke_announce.py

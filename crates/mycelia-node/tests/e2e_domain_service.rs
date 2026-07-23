@@ -18,16 +18,22 @@ async fn e2e_domain_service_visibility() {
     let cfg_a = NodeConfig {
         data_dir: dir_a.path().to_path_buf(),
         enable_mdns: false,
+        pow_difficulty: 0,
+        transport: "mock".into(),
         ..Default::default()
     };
     let cfg_b = NodeConfig {
         data_dir: dir_b.path().to_path_buf(),
         enable_mdns: false,
+        pow_difficulty: 0,
+        transport: "mock".into(),
         ..Default::default()
     };
     let cfg_c = NodeConfig {
         data_dir: dir_c.path().to_path_buf(),
         enable_mdns: false,
+        pow_difficulty: 0,
+        transport: "mock".into(),
         ..Default::default()
     };
 
@@ -117,11 +123,15 @@ async fn pex_without_dht() {
         data_dir: dir_a.path().to_path_buf(),
         enable_mdns: false,
         static_peers: vec!["127.0.0.1:9".parse().unwrap()],
+        pow_difficulty: 0,
+        transport: "mock".into(),
         ..Default::default()
     };
     let cfg_b = NodeConfig {
         data_dir: dir_b.path().to_path_buf(),
         enable_mdns: false,
+        pow_difficulty: 0,
+        transport: "mock".into(),
         ..Default::default()
     };
 

@@ -70,6 +70,15 @@ impl LocatorNode {
         Ok(())
     }
 
+    /// Convenience: listen on `127.0.0.1` ephemeral TCP port.
+    pub fn listen_local_ephemeral(&mut self) -> Result<(), DhtError> {
+        use std::str::FromStr;
+        self.listen_on(
+            Multiaddr::from_str("/ip4/127.0.0.1/tcp/0")
+                .map_err(|e| DhtError::Swarm(e.to_string()))?,
+        )
+    }
+
     pub fn dial(&mut self, addr: Multiaddr) -> Result<(), DhtError> {
         self.swarm
             .dial(addr)
@@ -173,6 +182,29 @@ impl LocatorNode {
                 Ok(_) => {}
                 Err(_) => return Err(DhtError::Timeout),
             }
+        }
+    }
+
+    /// Wait until the swarm reports at least one listen address.
+    pub async fn wait_listening(&mut self, timeout: Duration) -> Result<Multiaddr, DhtError> {
+        let deadline = tokio::time::Instant::now() + timeout;
+        loop {
+            let left = deadline.saturating_duration_since(tokio::time::Instant::now());
+            if left.is_zero() {
+                return Err(DhtError::Timeout);
+            }
+            match tokio::time::timeout(left, self.swarm.select_next_some()).await {
+                Ok(SwarmEvent::NewListenAddr { address, .. }) => return Ok(address),
+                Ok(_) => {}
+                Err(_) => return Err(DhtError::Timeout),
+            }
+        }
+    }
+
+    /// Background event pump (keeps Kad alive).
+    pub async fn run_forever(mut self) {
+        loop {
+            let _ = self.swarm.select_next_some().await;
         }
     }
 }

@@ -117,6 +117,14 @@ pub fn apply_attestation(store: &mut DomainStore, att: &Attestation) {
     }
 }
 
+#[cfg(all(feature = "alloc", feature = "crypto"))]
+pub fn apply_community_attestation(store: &mut CommunityStore, att: &Attestation) {
+    if att.scope != Scope::Community {
+        return;
+    }
+    store.add_member(CommunityId::new(att.scope_id), att.subject);
+}
+
 #[cfg(all(test, feature = "alloc"))]
 mod tests {
     use super::*;

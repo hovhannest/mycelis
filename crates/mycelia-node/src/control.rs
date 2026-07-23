@@ -1,8 +1,9 @@
 //! Localhost HTTP JSON control plane for CLI (Windows-portable).
 
+use crate::discovery::wrap_pow;
 use crate::runtime::NodeHandle;
 use crate::state::domain_scope;
-use mycelia_core::ids::{DomainId, NodeId};
+use mycelia_core::ids::{CommunityId, DomainId, NodeId};
 use mycelia_core::registry::Visibility;
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
@@ -19,6 +20,13 @@ pub enum ControlRequest {
         name: String,
     },
     CommunitiesList,
+    CommunitiesCreate {
+        name: String,
+    },
+    CommunitiesInvite {
+        community_hex: String,
+        subject_hex: String,
+    },
     ServicesList,
     ServicesAdvertise {
         name: String,
@@ -30,6 +38,7 @@ pub enum ControlRequest {
         domain_hex: String,
         subject_hex: String,
     },
+    GatewayStatus,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -63,7 +72,6 @@ async fn handle_conn(mut socket: TcpStream, handle: Arc<NodeHandle>) -> anyhow::
     if n == 0 {
         return Ok(());
     }
-    // Simple protocol: one JSON line request -> one JSON line response
     let req: ControlRequest = serde_json::from_slice(&buf[..n])?;
     let resp = dispatch(&handle, req).await;
     let out = serde_json::to_vec(&resp)?;
@@ -82,12 +90,13 @@ async fn dispatch(handle: &NodeHandle, req: ControlRequest) -> ControlResponse {
                     "node_id": hex::encode(st.node_id.as_bytes()),
                     "uptime_secs": st.now().saturating_sub(st.started_at),
                     "peers": st.peer_cache.len(),
+                    "listen": handle.listen_addr.to_string(),
+                    "interfaces": handle.iface_kinds,
                 }),
             }
         }
         ControlRequest::DomainsList => {
             let st = handle.state.lock().await;
-            // List domains we own or belong to via attestations
             let mut domains = vec![];
             for a in &st.attestations {
                 if let Some(d) = a.domain_id() {
@@ -111,11 +120,71 @@ async fn dispatch(handle: &NodeHandle, req: ControlRequest) -> ControlResponse {
                 body: serde_json::json!({ "domain": hex::encode(d.as_bytes()) }),
             }
         }
-        ControlRequest::CommunitiesList => ControlResponse {
-            ok: true,
-            error: None,
-            body: serde_json::json!({ "communities": [] }),
-        },
+        ControlRequest::CommunitiesList => {
+            let st = handle.state.lock().await;
+            let communities: Vec<_> = st
+                .list_communities()
+                .into_iter()
+                .map(|c| hex::encode(c.as_bytes()))
+                .collect();
+            ControlResponse {
+                ok: true,
+                error: None,
+                body: serde_json::json!({ "communities": communities }),
+            }
+        }
+        ControlRequest::CommunitiesCreate { name } => {
+            let mut st = handle.state.lock().await;
+            let c = st.create_community(name.as_bytes());
+            ControlResponse {
+                ok: true,
+                error: None,
+                body: serde_json::json!({ "community": hex::encode(c.as_bytes()) }),
+            }
+        }
+        ControlRequest::CommunitiesInvite {
+            community_hex,
+            subject_hex,
+        } => {
+            let mut st = handle.state.lock().await;
+            let community = match parse_hex16(&community_hex) {
+                Ok(b) => CommunityId::new(b),
+                Err(e) => {
+                    return ControlResponse {
+                        ok: false,
+                        error: Some(e),
+                        body: serde_json::Value::Null,
+                    }
+                }
+            };
+            let subject = match parse_hex16(&subject_hex) {
+                Ok(b) => NodeId::new(b),
+                Err(e) => {
+                    return ControlResponse {
+                        ok: false,
+                        error: Some(e),
+                        body: serde_json::Value::Null,
+                    }
+                }
+            };
+            let att = st.invite_community_member(community, subject);
+            let msg = mycelia_core::message::ControlMessage::Invite {
+                from: st.node_id,
+                domain: *community.as_bytes(),
+                attestation: att,
+            };
+            let mut buf = [0u8; 1024];
+            if let Ok(n) = msg.encode_frame(&mut buf) {
+                let mut t = handle.transport.lock().await;
+                let _ = t.send(&subject, &buf[..n]);
+                let _ = t.announce(&buf[..n]);
+            }
+            ControlResponse {
+                ok: true,
+                error: None,
+                body: serde_json::json!({ "invited": subject_hex }),
+            }
+        }
         ControlRequest::ServicesList => {
             let st = handle.state.lock().await;
             let viewer = st.node_id;
@@ -165,14 +234,14 @@ async fn dispatch(handle: &NodeHandle, req: ControlRequest) -> ControlResponse {
                 [0u8; 16]
             };
             let rec = st.advertise_service(&name, vis, audience);
-            // Broadcast announce
             let msg = mycelia_core::message::ControlMessage::ServiceAnnounce {
                 record: rec.clone(),
             };
             let mut buf = [0u8; 1024];
             if let Ok(n) = msg.encode_frame(&mut buf) {
+                let framed = wrap_pow(&buf[..n], st.pow_difficulty);
                 let mut t = handle.transport.lock().await;
-                let _ = t.announce(&buf[..n]);
+                let _ = t.announce(&framed);
             }
             ControlResponse {
                 ok: true,
@@ -234,6 +303,18 @@ async fn dispatch(handle: &NodeHandle, req: ControlRequest) -> ControlResponse {
                 ok: true,
                 error: None,
                 body: serde_json::json!({ "invited": subject_hex }),
+            }
+        }
+        ControlRequest::GatewayStatus => {
+            let st = handle.state.lock().await;
+            ControlResponse {
+                ok: true,
+                error: None,
+                body: serde_json::json!({
+                    "enabled": st.gateway_enabled,
+                    "bind": st.gateway_bind.map(|a| a.to_string()),
+                    "has_capability": st.has_gateway_capability(),
+                }),
             }
         }
     }

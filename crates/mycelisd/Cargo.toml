@@ -13,9 +13,10 @@ path = "src/main.rs"
 [features]
 default = ["node"]
 node = []
-full = ["node", "discovery-dht"]
+full = ["node", "discovery-dht", "gateway"]
 discovery-dht = ["mycelia-node/discovery-dht", "dep:mycelia-dht"]
 gateway = ["mycelia-node/gateway", "dep:mycelia-gateway"]
+iface-ble = ["mycelia-node/iface-ble"]
 control-lxmf = []
 
 [dependencies]

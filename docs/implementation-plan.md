@@ -57,6 +57,35 @@ mycelia-leaf → mycelia-core (no tokio/libp2p)
 - [x] 5.3 Leaf hardware smoke (G4) — **hardware pending** (see note)
 - [x] 5.4 README + 0.1.0 readiness
 
+### Phase 6 — Live Reticulum substrate
+- [x] 6.1 Workspace `reticulum-rs` 0.9.6 + `rand_core`/getrandom; Windows sqlite via transport `bundled`
+- [x] 6.2 Feature `transport-rns` (default); mock always compiled; runtime selection
+- [x] 6.3 `rns_transport.rs` MYC1 envelope + identity persist + TCP driver
+- [x] 6.4 Example `rns_tcp_ping`
+- [x] 6.5 `tests/rns_substrate_spike.rs` (+ ignored twin)
+- [x] 6.6 Runtime/config `transport` + `MYCELIS_TRANSPORT`
+- [x] 6.7 Docs: substrate-notes, wire-format MYC1, plan go/no-go
+
+### Phase 7 — DHT + gateway wired
+- [x] 7.1 DHT LocatorNode publish/query on enable_dht + discovery-dht
+- [x] 7.2 Gateway spawn with GATEWAY attestation; `gateway status`; `gateway_bind`
+- [x] 7.3 Feature-gated gateway SOCKS echo test
+
+### Phase 8 — Persist + PoW + communities CLI
+- [x] 8.1 Persist peer_cache / attestations / registry JSON under data_dir
+- [x] 8.2 PoW wrap (`MPW1`) on ServiceAnnounce; reject undersized
+- [x] 8.3 Communities create|list|invite (state + control + CLI + test)
+
+### Phase 9 — Python interop
+- [x] 9.1 Real `smoke_announce.py` (control ping / skip)
+- [x] 9.2 `.github/workflows/interop.yml` manual/label
+- [x] 9.3 interop README + requirements
+
+### Phase 10 — Leaf hardware software-prep
+- [x] 10.1 Flash/RAM table documented (pending measurements)
+- [x] 10.2 `docs/leaf-hardware.md` cross-compile + rns-embedded notes
+- [x] 10.3 Mark software-prep done (board flash still pending)
+
 ---
 
 ## Substrate go/no-go (Task 2.4)
@@ -65,18 +94,19 @@ mycelia-leaf → mycelia-core (no tokio/libp2p)
 |---|---|---|
 | G2 control plane | **GO** | Mock `ReticulumTransport` exchanges Mycelia frames |
 | G1 leaf deps | **GO** | `scripts/check-leaf-deps.sh` forbids tokio/libp2p |
-| FreeTAKTeam `reticulum-rs` live TCP | **DEFERRED** | Adapter behind trait; use mock for CI. Optional follow-on: wire `reticulum-rs` 0.9.6 when parity evidence available |
+| FreeTAKTeam `reticulum-rs` live TCP | **GO** | Adapter in `rns_transport` (0.9.6); MYC1 announce envelope; see [substrate-notes.md](substrate-notes.md) |
 | Fallback lelloman `rns-rs` | **NOT ACTIVATED** | Keep MIT/EPL posture |
 
 ---
 
-## Hardware pending (Task 5.3)
+## Hardware pending (Task 5.3 / Phase 10)
 
-ESP32-C3/C6 flash smoke is deferred until a board is available. Software leaf crate and dep budget are in place. Record flash/RAM here when hardware runs:
+ESP32-C3/C6 flash smoke is deferred until a board is available. Software leaf crate, dep budget, and cross-compile notes are in [leaf-hardware.md](leaf-hardware.md). Record flash/RAM here when hardware runs:
 
 | Board | Flash | RAM | Date |
 |---|---|---|---|
-| _pending_ | | | |
+| ESP32-C3 | _pending_ | | |
+| ESP32-C6 | _pending_ | | |
 
 ---
 
@@ -87,4 +117,6 @@ cargo test --workspace
 cargo check -p mycelisd --features full
 bash scripts/check-leaf-deps.sh
 cargo run -p mycelisd -- start
+# mock override:
+MYCELIS_TRANSPORT=mock cargo run -p mycelisd -- start --transport mock
 ```

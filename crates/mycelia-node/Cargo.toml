@@ -7,7 +7,15 @@ license.workspace = true
 description = "Mycelia std node runtime (discovery, domains, control API)"
 
 [features]
-default = []
+default = ["transport-rns"]
+transport-rns = ["dep:reticulum-rs"]
+# Unifies `rnode-ble` / `vrn76-kiss-ble` onto the shared reticulum-rs-transport graph.
+iface-ble = [
+    "transport-rns",
+    "dep:reticulum-rs-transport",
+    "reticulum-rs-transport/rnode-ble",
+    "reticulum-rs-transport/vrn76-kiss-ble",
+]
 discovery-dht = ["dep:mycelia-dht"]
 gateway = ["dep:mycelia-gateway"]
 
@@ -15,6 +23,9 @@ gateway = ["dep:mycelia-gateway"]
 mycelia-core = { workspace = true, features = ["std", "crypto"] }
 mycelia-dht = { workspace = true, optional = true }
 mycelia-gateway = { workspace = true, optional = true }
+reticulum-rs = { workspace = true, optional = true }
+reticulum-rs-transport = { workspace = true, optional = true }
+rand_core = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread", "macros", "net", "time", "sync", "io-util", "fs"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -33,3 +44,7 @@ sha2 = { workspace = true, default-features = true }
 [dev-dependencies]
 tempfile = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread", "macros", "net", "time", "sync", "io-util", "test-util"] }
+
+[[example]]
+name = "rns_tcp_ping"
+required-features = ["transport-rns"]

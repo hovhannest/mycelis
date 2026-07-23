@@ -95,6 +95,10 @@ impl<'a> Decoder<'a> {
         self.buf.len().saturating_sub(self.pos)
     }
 
+    pub fn position(&self) -> usize {
+        self.pos
+    }
+
     pub fn read_u8(&mut self) -> Result<u8, DecodeError> {
         if self.pos >= self.buf.len() {
             return Err(DecodeError::Truncated);

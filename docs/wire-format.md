@@ -68,3 +68,28 @@ node_id:NodeId
 last_seen:u64
 interface_hint:blob (<=64)
 ```
+
+## Phase 6+ — RNS announce envelope (MYC1)
+
+Mycelia control frames over live FreeTAKTeam `reticulum-rs` ride in announce `app_data`:
+
+```
+magic:"MYC1"
+from:NodeId          # 16 bytes
+to:NodeId | zeros    # 16 bytes; zeros = broadcast
+payload:bytes        # typically a Mycelia control frame
+```
+
+Receivers accept envelopes where `to` is all zeros **or** equals the local NodeId. Mycelia `NodeId` is not the RNS `AddressHash`; see [substrate-notes.md](substrate-notes.md).
+
+### ServiceAnnounce PoW wrap (MPW1)
+
+When `pow_difficulty > 0`, advertised ServiceAnnounce frames are wrapped:
+
+```
+magic:"MPW1"
+PowStamp { version:u8, difficulty:u8, nonce:u64 }
+frame: ControlMessage bytes
+```
+
+`PowStamp` proves leading-zero bits of SHA-256(frame \|\| nonce_le). Undersized stamps are rejected in `handle_control_bytes`.

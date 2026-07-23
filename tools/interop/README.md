@@ -1,8 +1,27 @@
-# Python RNS interop harness (Task 5.2)
+# Python RNS interop harness (Phase 9)
 
-Optional smoke tests against the Python Reticulum reference (`rns`).
+Optional smoke tests against a running `mycelisd` control plane (and optionally Python `rns`).
 
-## Setup
+## One-command smoke
+
+```bash
+# Terminal 1
+cargo run -p mycelisd -- --data-dir .mycelis-interop start --transport mock
+
+# Terminal 2
+cd tools/interop
+python smoke_announce.py
+# or:
+MYCELIS_DATA_DIR=.mycelis-interop python smoke_announce.py
+```
+
+Skip intentionally (exit 0):
+
+```bash
+MYCELIS_INTEROP_SKIP=1 python smoke_announce.py
+```
+
+## Setup (optional Python RNS)
 
 ```bash
 cd tools/interop
@@ -12,18 +31,6 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## Smoke
+## CI
 
-```bash
-# Terminal 1: Rust node
-cargo run -p mycelisd -- --data-dir /tmp/mycelis-a start
-
-# Terminal 2: Python announce probe (requires rns configured)
-python smoke_announce.py
-```
-
-CI: run manually or with workflow label `interop` (not required for default PR CI).
-
-## Status
-
-Harasses Mycelia control-plane readiness. Full announce/link parity with Python `rns` depends on the deferred `reticulum-rs` adapter (see implementation-plan Task 2.4).
+Workflow [`.github/workflows/interop.yml`](../../.github/workflows/interop.yml) is **manual** / `interop` label only — not part of default PR CI.
